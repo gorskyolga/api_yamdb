@@ -6,21 +6,15 @@ class User(AbstractUser):
     USER = 'user'
     MODERATOR = 'moderator'
     ADMIN = 'admin'
-    ROLES_CHOICES = [
+    ROLES_CHOICES = (
         ('user', 'Аутентифицированный пользователь'),
         ('moderator', 'Модератор'),
         ('admin', 'Администратор'),
-    ]
-
-    username = models.CharField(
-        verbose_name='Имя пользователя',
-        max_length=150,
-        unique=True,
     )
+
     email = models.EmailField(
         verbose_name='Электронный адрес',
         max_length=254,
-        blank=True,
         unique=True,
     )
     bio = models.TextField(
@@ -32,7 +26,23 @@ class User(AbstractUser):
         choices=ROLES_CHOICES,
         default=USER,
     )
-    confirmation_code = models.CharField(max_length=32)
+
+    @property
+    def is_user(self):
+        return self.role == self.USER
+
+    @property
+    def is_moderator(self):
+        return self.role == self.MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.role == self.ADMIN or self.is_staff
 
     def __str__(self):
         return self.username
+
+    class Meta:
+        ordering = ('username',)
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
