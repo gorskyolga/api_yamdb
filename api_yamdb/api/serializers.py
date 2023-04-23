@@ -1,22 +1,49 @@
+from django.db.models import Avg
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-from django.shortcuts import get_object_or_404
 
-from django.db.models import Avg
+from api.validators import validate_username
+from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
+from users.models import User
 
-from reviews.models import Comment, Review, Title
+
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Category
+        fields = ('name', 'slug',)
+
+
+class GenreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Genre
+        fields = ('name', 'slug',)
 
 
 class TitleSerializer(serializers.ModelSerializer):
+    genre = GenreSerializer(many=True)
+    category = CategorySerializer()
     rating = serializers.SerializerMethodField(allow_null=True)
 
     class Meta:
-        fields = '__all__'
         model = Title
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category',)
+
+    def create(self, validated_data):
+        genres = validated_data.pop('genre')
+        category = validated_data.pop('category')
+        title = Title.objects.create(**validated_data)
+        for genre in genres:
+            current_genre, status = Genre.objects.get_or_create(**genre)
+            TitleGenre.objects.create(title=title, genre=current_genre)
+        current_category, status = Category.objects.get_or_create(**category)
+        title.category = current_category
+        title.save()
+        return title
 
     def get_rating(self, obj):
         rating = Review.objects.filter(
-            title_id=obj).aaggregate(Avg('score'))['score__avg']
+            title_id=obj).aggregate(Avg('score'))['score__avg']
         return round(rating, 0)
 
 
@@ -59,3 +86,42 @@ class ReviewSerializer(serializers.ModelSerializer):
                 "Вы уже оставляли обзор на данное произведение"
             )
         return data
+
+
+class SignUpSerializer(serializers.Serializer):
+    email = serializers.EmailField(max_length=254, required=True)
+    username = serializers.CharField(
+        max_length=150,
+        required=True,
+        validators=[validate_username],
+    )
+
+    def validate(self, data):
+        email = data.get('email')
+        username = data.get('username')
+        if User.objects.filter(email=email, username=username).exists():
+            return data
+        elif User.objects.filter(email=email).exists():
+            raise serializers.ValidationError(
+                'Пользователь с такми `email` уже существует!')
+        elif User.objects.filter(username=username).exists():
+            raise serializers.ValidationError(
+                'Пользователь с такми `username` уже существует!')
+        return data
+
+
+class TokenSerializer(serializers.Serializer):
+    username = serializers.CharField(
+        max_length=150,
+        required=True,
+        validators=[validate_username]
+    )
+    confirmation_code = serializers.CharField(max_length=39, required=True)
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ('username', 'email', 'first_name',
+                  'last_name', 'bio', 'role')
+        model = User
+        read_only_field = ('role',)
