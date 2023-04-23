@@ -1,3 +1,4 @@
+
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
@@ -5,17 +6,28 @@ from rest_framework import filters, permissions, status, viewsets
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-from reviews.models import Title
+from reviews.models import Category, Genre, Title
 from users.models import User
 
 from api.permissions import IsAdmin
-from api.serializers import (SignUpSerializer, TitleSerializer,
+from api.serializers import (CategorySerializer, GenreSerializer,
+                             SignUpSerializer, TitleSerializer,
                              TokenSerializer, UserSerializer)
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class GenreViewSet(viewsets.ModelViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
 
 
 @api_view(['POST'])
@@ -32,7 +44,6 @@ def signup(request):
         from_email='api_yamdb@example.com',
         recipient_list=[email],
     )
-
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
@@ -49,7 +60,6 @@ def token(request):
             'confirmation_code': 'Код подтверждения не соответствует логину!'
         }
         return Response(data, status=status.HTTP_400_BAD_REQUEST)
-
     data = {'token': str(AccessToken.for_user(user))}
     return Response(data, status=status.HTTP_200_OK)
 
@@ -75,5 +85,4 @@ class UserViewSet(viewsets.ModelViewSet):
             )
             serializer.is_valid(raise_exception=True)
             serializer.save(role=user.role)
-
         return Response(serializer.data)
