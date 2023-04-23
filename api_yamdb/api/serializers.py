@@ -31,6 +31,6 @@ class TitleSerializer(serializers.ModelSerializer):
             current_genre, status = Genre.objects.get_or_create(**genre)
             TitleGenre.objects.create(title=title, genre=current_genre)
         current_category, status = Category.objects.get_or_create(**category)
-        title.genre = current_category
+        title.category = current_category
         title.save()
         return title
