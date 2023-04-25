@@ -1,3 +1,5 @@
+import datetime as dt
+
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
@@ -27,24 +29,54 @@ class TitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'rating', 'description', 'genre', 'category',)
+        fields = ('id', 'name', 'year', 'rating', 'description', 'genre',
+                  'category',)
+
+    def get_rating(self, obj):
+        rating = Review.objects.filter(
+            title_id=obj).aggregate(Avg('score'))['score__avg']
+        # return round(rating, 0)
+        return rating
+
+    def validate_year(self, value):
+        year = dt.date.today().year
+        if value > year:
+            raise serializers.ValidationError(
+                'Проверьте год выпуска произведения!'
+            )
+        return value
+
+
+class TitleCreateUpdateSerializer(TitleSerializer):
+    genre = serializers.SlugRelatedField(slug_field='slug', many=True,
+                                         queryset=Genre.objects.all())
+    category = serializers.SlugRelatedField(slug_field='slug',
+                                            queryset=Category.objects.all())
 
     def create(self, validated_data):
         genres = validated_data.pop('genre')
         category = validated_data.pop('category')
         title = Title.objects.create(**validated_data)
         for genre in genres:
-            current_genre, status = Genre.objects.get_or_create(**genre)
-            TitleGenre.objects.create(title=title, genre=current_genre)
-        current_category, status = Category.objects.get_or_create(**category)
-        title.category = current_category
+            TitleGenre.objects.create(title=title, genre=genre)
+        title.category = category
         title.save()
         return title
 
-    def get_rating(self, obj):
-        rating = Review.objects.filter(
-            title_id=obj).aggregate(Avg('score'))['score__avg']
-        return round(rating, 0)
+    def update(self, instance, validated_data):
+        instance.name = validated_data.get('name', instance.name)
+        instance.year = validated_data.get('year', instance.year)
+        instance.description = validated_data.get(
+            'description', instance.description
+        )
+        instance.category = validated_data.get('category', instance.category)
+        genres = validated_data.get('genre', [])
+        lst = []
+        for genre in genres:
+            lst.append(genre)
+        instance.genre.set(lst)
+        instance.save()
+        return instance
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -72,6 +104,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = '__all__'
+        model = Review
 
     def validate(self, data):
         if self.context['request'].method != 'POST':
