@@ -19,9 +19,9 @@ class Command(BaseCommand):
         if input() != '1':
             self.stdout.write('Выполнение команды остановлено.')
             return
-        for model_name in (Category, Comment, Genre, Review, Title, TitleGenre,
-                           User):
-            model_name.objects.all().delete()
+        [model_name.objects.all().delete() for model_name in (
+            Category, Comment, Genre, Review, Title, TitleGenre, User
+        )]
         self.stdout.write('Таблицы базы данных очищены.')
 
         models_info = (
@@ -30,8 +30,7 @@ class Command(BaseCommand):
             ('users', User, ('id', 'username', 'email', 'role', 'bio',
                              'first_name', 'last_name')),
         )
-        for model in models_info:
-            file_name, model_name, field_names = model[0], model[1], model[2]
+        for file_name, model_name, field_names in models_info:
             with open(
                 f'static/data/{file_name}.csv', encoding='utf-8'
             ) as csv_file:
@@ -48,51 +47,41 @@ class Command(BaseCommand):
         with open('static/data/titles.csv', encoding='utf-8') as csv_file:
             csv_reader = csv.DictReader(csv_file, delimiter=',')
             for row in csv_reader:
-                category = Category.objects.get(id=row['category'])
-                Title.objects.create(id=row['id'], name=row['name'],
-                                     year=row['year'], category=category)
+                Title.objects.create(
+                    id=row['id'], name=row['name'], year=row['year'],
+                    category=Category.objects.get(id=row['category'])
+                )
             self.stdout.write('Даннные модели Title загружены.')
 
         with open('static/data/genre_title.csv', encoding='utf-8') as csv_file:
             csv_reader = csv.DictReader(csv_file, delimiter=',')
             for row in csv_reader:
-                title = Title.objects.get(id=row['title_id'])
-                genre = Genre.objects.get(id=row['genre_id'])
                 TitleGenre.objects.create(
-                    id=row['id'], title=title, genre=genre
+                    id=row['id'], title=Title.objects.get(id=row['title_id']),
+                    genre=Genre.objects.get(id=row['genre_id'])
                 )
             self.stdout.write('Даннные модели TitleGenre загружены.')
 
         with open('static/data/review.csv', encoding='utf-8') as csv_file:
             csv_reader = csv.DictReader(csv_file, delimiter=',')
             for row in csv_reader:
-                title = Title.objects.get(id=row['title_id'])
-                author = User.objects.get(id=row['author'])
-                Review.objects.create(
-                    id=row['id'], title=title, text=row['text'],
-                    author=author, score=row['score'], created=row['pub_date']
+                obj = Review.objects.create(
+                    id=row['id'], title=Title.objects.get(id=row['title_id']),
+                    text=row['text'], score=row['score'],
+                    author=User.objects.get(id=row['author'])
                 )
-                # после изменения модели Review заменить на:
-                # Review.objects.create(
-                #     id=row['id'], title=title, text=row['text'],
-                #     author=author, score=row['score'], pub_date=row['pub_date']
-                # )
+                obj.pub_date = row['pub_date']
+                obj.save()
             self.stdout.write('Даннные модели Review загружены.')
 
         with open('static/data/comments.csv', encoding='utf-8') as csv_file:
             csv_reader = csv.DictReader(csv_file, delimiter=',')
             for row in csv_reader:
-                review = Review.objects.get(id=row['review_id'])
-                title = Title.objects.get(id=review.title_id)
-                # после изменения модели Review удалить предыдущую строку
-                author = User.objects.get(id=row['author'])
-                Comment.objects.create(
-                    id=row['id'], title=review, review=title, text=row['text'],
-                    author=author, created=row['pub_date']
+                obj = Comment.objects.create(
+                    id=row['id'], text=row['text'],
+                    review=Review.objects.get(id=row['review_id']),
+                    author=User.objects.get(id=row['author'])
                 )
-                # после изменения модели Review заменить на:
-                # Comment.objects.create(
-                #     id=row['id'], review=review, text=row['text'],
-                #     author=author, pub_date=row['pub_date']
-                # )
+                obj.pub_date = row['pub_date']
+                obj.save()
             self.stdout.write('Даннные модели Comment загружены.')
