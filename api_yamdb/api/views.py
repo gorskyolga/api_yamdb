@@ -52,6 +52,16 @@ class TitleViewSet(viewsets.ModelViewSet):
         return queryset
 
 
+class CategoryViewSet(CreateListDestroyViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+
+
+class GenreViewSet(CreateListDestroyViewSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+
+
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (
@@ -84,16 +94,6 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return self.get_review().comments.all()
-
-
-class CategoryViewSet(CreateListDestroyViewSet):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
-
-
-class GenreViewSet(CreateListDestroyViewSet):
-    queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
 
 
 @api_view(['POST'])
