@@ -16,6 +16,11 @@ class Category(models.Model):
         verbose_name='Слаг категории',
     )
 
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
+
     def __str__(self):
         return self.name
 
@@ -29,6 +34,11 @@ class Genre(models.Model):
         unique=True,
         verbose_name='Слаг жанра',
     )
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'Жанры'
 
     def __str__(self):
         return self.name
@@ -47,7 +57,9 @@ class Title(models.Model):
         blank=True,
         null=True
     )
-    genre = models.ManyToManyField(Genre, through='TitleGenre')
+    genre = models.ManyToManyField(
+        Genre, through='TitleGenre', related_name='titles'
+    )
     category = models.ForeignKey(
         Category,
         blank=True,
@@ -58,7 +70,7 @@ class Title(models.Model):
     )
 
     class Meta:
-        # ordering = ('year',)
+        ordering = ('year',)
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
 

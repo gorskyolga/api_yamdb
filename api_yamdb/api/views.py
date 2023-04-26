@@ -41,6 +41,16 @@ class TitleViewSet(viewsets.ModelViewSet):
             return TitleCreateUpdateSerializer
         return TitleSerializer
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        genre_slug = self.request.query_params.get('genre')
+        if genre_slug is not None:
+            queryset = queryset.filter(genre__slug=genre_slug)
+        category_slug = self.request.query_params.get('category')
+        if category_slug is not None:
+            queryset = queryset.filter(category__slug=category_slug)
+        return queryset
+
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
