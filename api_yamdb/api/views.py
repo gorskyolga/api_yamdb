@@ -44,7 +44,9 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
-    permission_classes = (AdminModeratAuthorOrReadonly,)
+    permission_classes = (
+        AdminModeratAuthorOrReadonly, permissions.IsAuthenticatedOrReadOnly
+    )
     pagination_class = LimitOffsetPagination
 
     def get_title(self):
@@ -54,22 +56,24 @@ class ReviewViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user, title=self.get_title())
 
     def get_queryset(self):
-        return self.get_title().reviews
+        return self.get_title().reviews.all()
 
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = (AdminModeratAuthorOrReadonly,)
+    permission_classes = (
+        AdminModeratAuthorOrReadonly, permissions.IsAuthenticatedOrReadOnly
+    )
     pagination_class = LimitOffsetPagination
 
     def get_review(self):
         return get_object_or_404(Review, pk=self.kwargs.get('review_id'))
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user, title=self.get_review())
+        serializer.save(author=self.request.user, review=self.get_review())
 
     def get_queryset(self):
-        return self.get_review().comments
+        return self.get_review().comments.all()
 
 
 class CategoryViewSet(CreateListDestroyViewSet):
