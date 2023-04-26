@@ -71,10 +71,7 @@ class TitleCreateUpdateSerializer(TitleSerializer):
         )
         instance.category = validated_data.get('category', instance.category)
         genres = validated_data.get('genre', [])
-        lst = []
-        for genre in genres:
-            lst.append(genre)
-        instance.genre.set(lst)
+        instance.genre.set(list(genres))
         instance.save()
         return instance
 
