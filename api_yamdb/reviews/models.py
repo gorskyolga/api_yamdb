@@ -1,9 +1,8 @@
 from django.db import models
-from django.contrib.auth import get_user_model
+from django.db.models.constraints import UniqueConstraint
 from django.core.validators import MinValueValidator, MaxValueValidator
 
-
-User = get_user_model()
+from users.models import User
 
 
 class Category(models.Model):
@@ -89,6 +88,9 @@ class Review(models.Model):
         ordering = ('-pub_date', )
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
+        constraints = (
+            UniqueConstraint(fields=['title', 'author'], name='unique_review'),
+        )
 
 
 class Comment(models.Model):

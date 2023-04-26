@@ -35,8 +35,8 @@ class TitleSerializer(serializers.ModelSerializer):
     def get_rating(self, obj):
         rating = Review.objects.filter(
             title_id=obj).aggregate(Avg('score'))['score__avg']
-        # return round(rating, 0)
-        return rating
+        if rating is not None:
+            return round(rating, 0)
 
     def validate_year(self, value):
         year = dt.date.today().year
