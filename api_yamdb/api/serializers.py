@@ -23,7 +23,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
-    rating = serializers.SerializerMethodField(allow_null=True)
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         model = Title
@@ -72,6 +72,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = '__all__'
+        model = Review
 
     def validate(self, data):
         if self.context['request'].method != 'POST':
