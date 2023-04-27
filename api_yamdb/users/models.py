@@ -14,14 +14,20 @@ class User(AbstractUser):
 
     email = models.EmailField(
         verbose_name='Электронный адрес',
+        help_text=('Обязательное поле. Не более 254 символов. '
+                   'Перед @ допустимы буквы и цифры.'),
         max_length=254,
         unique=True,
     )
     bio = models.TextField(
         verbose_name='Биография',
+        help_text='Необязательное поле.',
         blank=True,
     )
     role = models.CharField(
+        verbose_name='Роль пользователя',
+        help_text=('Доступные варианты: Аутентифицированный пользователь, '
+                   'Модератор, Администратор.'),
         max_length=9,
         choices=ROLES_CHOICES,
         default=USER,

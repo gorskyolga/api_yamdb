@@ -129,13 +129,14 @@ class SignUpSerializer(serializers.Serializer):
     def validate(self, data):
         email = data.get('email')
         username = data.get('username')
-        if not User.objects.filter(email=email, username=username).exists():
-            if User.objects.filter(email=email).exists():
-                raise serializers.ValidationError(
-                    'Пользователь с такми `email` уже существует!')
-            if User.objects.filter(username=username).exists():
-                raise serializers.ValidationError(
-                    'Пользователь с такми `username` уже существует!')
+        if User.objects.filter(email=email, username=username).exists():
+            return data
+        if User.objects.filter(email=email).exists():
+            raise serializers.ValidationError(
+                'Пользователь с такми `email` уже существует!')
+        if User.objects.filter(username=username).exists():
+            raise serializers.ValidationError(
+                'Пользователь с такми `username` уже существует!')
         return data
 
 
