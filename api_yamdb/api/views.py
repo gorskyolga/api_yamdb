@@ -16,6 +16,7 @@ from api.serializers import (
     SignUpSerializer, TitleCreateUpdateSerializer, TitleSerializer,
     TokenSerializer, UserSerializer
 )
+from api_yamdb.settings import EMAIL_SUBJECT, EMAIL_ADDRESS
 from reviews.models import Category, Genre, Review, Title
 from users.models import User
 
@@ -96,8 +97,8 @@ class CommentViewSet(viewsets.ModelViewSet):
         return self.get_review().comments.all()
 
 
-@api_view(['POST'])
-@permission_classes([permissions.AllowAny])
+@api_view(('POST',))
+@permission_classes((permissions.AllowAny,))
 def signup(request):
     serializer = SignUpSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -105,16 +106,16 @@ def signup(request):
     username = serializer.validated_data.get('username')
     user = User.objects.get_or_create(email=email, username=username)[0]
     send_mail(
-        subject='Код подтверждения',
+        subject=EMAIL_SUBJECT,
         message=default_token_generator.make_token(user),
-        from_email='api_yamdb@example.com',
-        recipient_list=[email],
+        from_email=EMAIL_ADDRESS,
+        recipient_list=(email,),
     )
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(['POST'])
-@permission_classes([permissions.AllowAny])
+@api_view(('POST',))
+@permission_classes((permissions.AllowAny,))
 def token(request):
     serializer = TokenSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -137,10 +138,10 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('=username',)
     lookup_field = 'username'
-    http_method_names = ['get', 'post', 'head', 'patch', 'delete']
+    http_method_names = ('get', 'post', 'head', 'patch', 'delete',)
 
-    @action(methods=['get', 'patch'], detail=False,
-            permission_classes=[permissions.IsAuthenticated])
+    @action(methods=('get', 'patch',), detail=False,
+            permission_classes=(permissions.IsAuthenticated,))
     def me(self, request):
         user = self.request.user
         if self.request.method == 'GET':

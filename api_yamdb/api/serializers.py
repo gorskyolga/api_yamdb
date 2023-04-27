@@ -123,20 +123,19 @@ class SignUpSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=150,
         required=True,
-        validators=[validate_username],
+        validators=(validate_username,),
     )
 
     def validate(self, data):
         email = data.get('email')
         username = data.get('username')
-        if User.objects.filter(email=email, username=username).exists():
-            return data
-        elif User.objects.filter(email=email).exists():
-            raise serializers.ValidationError(
-                'Пользователь с такми `email` уже существует!')
-        elif User.objects.filter(username=username).exists():
-            raise serializers.ValidationError(
-                'Пользователь с такми `username` уже существует!')
+        if not User.objects.filter(email=email, username=username).exists():
+            if User.objects.filter(email=email).exists():
+                raise serializers.ValidationError(
+                    'Пользователь с такми `email` уже существует!')
+            if User.objects.filter(username=username).exists():
+                raise serializers.ValidationError(
+                    'Пользователь с такми `username` уже существует!')
         return data
 
 
@@ -144,7 +143,7 @@ class TokenSerializer(serializers.Serializer):
     username = serializers.CharField(
         max_length=150,
         required=True,
-        validators=[validate_username]
+        validators=(validate_username,)
     )
     confirmation_code = serializers.CharField(max_length=39, required=True)
 
