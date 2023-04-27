@@ -8,6 +8,7 @@ from rest_framework import serializers
 from api.validators import validate_username
 from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
 from users.models import User
+from api_yamdb.settings import SCORE_MAXVALUE, SCORE_MINVALUE, ErrorMessage
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -25,7 +26,7 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
-    rating = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField(method_name=None)
 
     class Meta:
         model = Title
@@ -98,6 +99,8 @@ class ReviewSerializer(serializers.ModelSerializer):
         many=False,
         read_only=True
     )
+    score = serializers.IntegerField(
+        required=False, min_value=SCORE_MINVALUE, max_value=SCORE_MAXVALUE)
 
     class Meta:
         fields = '__all__'
@@ -113,8 +116,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         author = self.context['request'].user
         if Review.objects.filter(title_id=title, author=author).exists():
             raise serializers.ValidationError(
-                "Вы уже оставляли обзор на данное произведение"
-            )
+                ErrorMessage.ALREADY_HAS_REVIEW_ERROR)
         return data
 
 

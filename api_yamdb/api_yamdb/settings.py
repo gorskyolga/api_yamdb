@@ -134,3 +134,11 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=30),
 }
+
+
+class ErrorMessage:
+    ALREADY_HAS_REVIEW_ERROR = 'Вы уже оставляли обзор на данное произведение'
+
+
+SCORE_MINVALUE = 0
+SCORE_MAXVALUE = 10

@@ -3,6 +3,7 @@ from django.db.models.constraints import UniqueConstraint
 from django.core.validators import MinValueValidator, MaxValueValidator
 
 from users.models import User
+from api_yamdb.settings import SCORE_MINVALUE, SCORE_MAXVALUE
 
 
 class Category(models.Model):
@@ -91,8 +92,9 @@ class Review(models.Model):
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews')
     text = models.TextField()
-    score = models.IntegerField(validators=[MinValueValidator(0),
-                                            MaxValueValidator(10)])
+    score = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(SCORE_MINVALUE),
+                    MaxValueValidator(SCORE_MAXVALUE)])
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
 
@@ -101,8 +103,11 @@ class Review(models.Model):
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = (
-            UniqueConstraint(fields=['title', 'author'], name='unique_review'),
-        )
+            UniqueConstraint(fields=(
+                'title', 'author',), name='unique_review'),)
+
+    def __str__(self):
+        return self.text
 
 
 class Comment(models.Model):
@@ -118,3 +123,6 @@ class Comment(models.Model):
         ordering = ('-pub_date', )
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
+
+    def __str__(self):
+        return self.text
