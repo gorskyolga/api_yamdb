@@ -1,9 +1,9 @@
 import datetime as dt
 
+from django.db import transaction
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-
 
 from api.validators import validate_username
 from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
@@ -53,6 +53,7 @@ class TitleCreateUpdateSerializer(TitleSerializer):
     category = serializers.SlugRelatedField(slug_field='slug',
                                             queryset=Category.objects.all())
 
+    @transaction.atomic
     def create(self, validated_data):
         genres = validated_data.pop('genre')
         category = validated_data.pop('category')
