@@ -31,7 +31,6 @@ class CreateListDestroyViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadonly,)
     filter_backends = (DjangoFilterBackend,)
@@ -43,7 +42,7 @@ class TitleViewSet(viewsets.ModelViewSet):
         return TitleSerializer
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = Title.objects.all()
         genre_slug = self.request.query_params.get('genre')
         if genre_slug is not None:
             queryset = queryset.filter(genre__slug=genre_slug)

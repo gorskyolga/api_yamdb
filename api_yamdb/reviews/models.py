@@ -2,17 +2,21 @@ from django.db import models
 from django.db.models.constraints import UniqueConstraint
 from django.core.validators import MinValueValidator, MaxValueValidator
 
+from api.validators import validate_year
 from users.models import User
 
 
 class Category(models.Model):
     name = models.CharField(
-        max_length=256,
+        max_length=255,
         verbose_name='Название категории',
+        help_text='Длина не более 255 символов.'
     )
     slug = models.SlugField(
         unique=True,
         verbose_name='Слаг категории',
+        help_text=('Уникальное поле. Длина не более 50 символов. Допустимые '
+                   'символы: -, _, латинские буквы, цифры.')
     )
 
     class Meta:
@@ -26,12 +30,15 @@ class Category(models.Model):
 
 class Genre(models.Model):
     name = models.CharField(
-        max_length=256,
+        max_length=255,
         verbose_name='Название жанра',
+        help_text='Длина не более 255 символов.'
     )
     slug = models.SlugField(
         unique=True,
         verbose_name='Слаг жанра',
+        help_text=('Уникальное поле. Длина не более 50 символов. Допустимые '
+                   'символы: -, _, латинские буквы, цифры.')
     )
 
     class Meta:
@@ -45,19 +52,26 @@ class Genre(models.Model):
 
 class Title(models.Model):
     name = models.CharField(
-        max_length=256,
+        max_length=255,
         verbose_name='Название произведения',
+        help_text='Длина не более 255 символов.'
     )
-    year = models.IntegerField(
+    year = models.PositiveSmallIntegerField(
         verbose_name='Год выпуска',
+        help_text='Год выпуска не может быть больше текущего.',
+        validators=(MinValueValidator(0), validate_year)
     )
     description = models.TextField(
         verbose_name='Описание произведения',
+        help_text='Не обязательное поле. Значение по умолчание - пусто.',
         blank=True,
-        null=True
+        # null=True
+        default=''
     )
     genre = models.ManyToManyField(
-        Genre, through='TitleGenre', related_name='titles'
+        Genre, through='TitleGenre', related_name='titles',
+        verbose_name='Жанр произведения',
+        help_text='Жанр произведения из существующих жанров'
     )
     category = models.ForeignKey(
         Category,
@@ -66,6 +80,7 @@ class Title(models.Model):
         on_delete=models.SET_NULL,
         related_name='titles',
         verbose_name='Категория произведения',
+        help_text='Категория произведения из существующих категорий',
     )
 
     class Meta:
@@ -78,8 +93,12 @@ class Title(models.Model):
 
 
 class TitleGenre(models.Model):
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE,
+                              verbose_name='Название произведения',
+                              help_text='Длина не более 255 символов.')
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE,
+                              verbose_name='Название жанра',
+                              help_text='Длина не более 255 символов.')
 
     def __str__(self):
         return f'{self.title} {self.genre}'

@@ -1,11 +1,11 @@
-import datetime as dt
+# import datetime as dt
 
 from django.db import transaction
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-from api.validators import validate_username
+from api.validators import validate_username, validate_year
 from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
 from users.models import User
 
@@ -26,6 +26,11 @@ class TitleSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
     rating = serializers.SerializerMethodField()
+    year = serializers.IntegerField(
+        min_value=0,
+        required=True,
+        validators=(validate_year,),
+    )
 
     class Meta:
         model = Title
@@ -38,13 +43,13 @@ class TitleSerializer(serializers.ModelSerializer):
         if rating is not None:
             return round(rating, 0)
 
-    def validate_year(self, value):
-        year = dt.date.today().year
-        if value > year:
-            raise serializers.ValidationError(
-                'Проверьте год выпуска произведения!'
-            )
-        return value
+    # def validate_year(self, value):
+    #     year = dt.date.today().year
+    #     if value > year:
+    #         raise serializers.ValidationError(
+    #             'Проверьте год выпуска произведения!'
+    #         )
+    #     return value
 
 
 class TitleCreateUpdateSerializer(TitleSerializer):
