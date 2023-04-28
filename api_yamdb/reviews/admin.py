@@ -30,13 +30,13 @@ class TitleGenreAdmin(admin.ModelAdmin):
 
 
 class ReviewAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'title', 'text',)
+    list_display = ('pk', 'author', 'title', 'text',)
     list_editable = ('title', 'text',)
     search_fields = ('title', 'text',)
 
 
 class CommentAdmin(admin.ModelAdmin):
-    list_display = ('pk', 'review', 'text',)
+    list_display = ('pk', 'author', 'review', 'text',)
     list_editable = ('review', 'text',)
     search_fields = ('review', 'text',)
 
