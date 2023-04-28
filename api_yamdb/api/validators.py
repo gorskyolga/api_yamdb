@@ -20,7 +20,6 @@ def validate_username(value):
 
 
 def validate_year(value):
-    """Проверяет, что год не превышает текущий."""
     year = dt.date.today().year
     if value > year:
         raise serializers.ValidationError(

@@ -1,5 +1,3 @@
-# import datetime as dt
-
 from django.db import transaction
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
@@ -42,14 +40,6 @@ class TitleSerializer(serializers.ModelSerializer):
             title_id=obj).aggregate(Avg('score'))['score__avg']
         if rating is not None:
             return round(rating, 0)
-
-    # def validate_year(self, value):
-    #     year = dt.date.today().year
-    #     if value > year:
-    #         raise serializers.ValidationError(
-    #             'Проверьте год выпуска произведения!'
-    #         )
-    #     return value
 
 
 class TitleCreateUpdateSerializer(TitleSerializer):
