@@ -1,11 +1,10 @@
-import datetime as dt
-
+from django.db import transaction
 from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-
-from api.validators import validate_username
+from api.validators import validate_username, validate_year
+from api_yamdb.settings import SCORE_MAXVALUE, SCORE_MINVALUE, ErrorMessage
 from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
 from users.models import User
 
@@ -25,7 +24,12 @@ class GenreSerializer(serializers.ModelSerializer):
 class TitleSerializer(serializers.ModelSerializer):
     genre = GenreSerializer(many=True)
     category = CategorySerializer()
-    rating = serializers.SerializerMethodField()
+    rating = serializers.SerializerMethodField(method_name='get_rating')
+    year = serializers.IntegerField(
+        min_value=0,
+        required=True,
+        validators=(validate_year,),
+    )
 
     class Meta:
         model = Title
@@ -38,14 +42,6 @@ class TitleSerializer(serializers.ModelSerializer):
         if rating is not None:
             return round(rating, 0)
 
-    def validate_year(self, value):
-        year = dt.date.today().year
-        if value > year:
-            raise serializers.ValidationError(
-                'Проверьте год выпуска произведения!'
-            )
-        return value
-
 
 class TitleCreateUpdateSerializer(TitleSerializer):
     genre = serializers.SlugRelatedField(slug_field='slug', many=True,
@@ -53,6 +49,7 @@ class TitleCreateUpdateSerializer(TitleSerializer):
     category = serializers.SlugRelatedField(slug_field='slug',
                                             queryset=Category.objects.all())
 
+    @transaction.atomic
     def create(self, validated_data):
         genres = validated_data.pop('genre')
         category = validated_data.pop('category')
@@ -81,7 +78,7 @@ class CommentSerializer(serializers.ModelSerializer):
         slug_field='username',
         read_only=True
     )
-    review = serializers.SlugRelatedField(read_only=True, slug_field="text")
+    review = serializers.SlugRelatedField(read_only=True, slug_field='text')
 
     class Meta:
         fields = '__all__'
@@ -94,10 +91,12 @@ class ReviewSerializer(serializers.ModelSerializer):
         read_only=True
     )
     title = serializers.SlugRelatedField(
-        slug_field="id",
+        slug_field='id',
         many=False,
         read_only=True
     )
+    score = serializers.IntegerField(
+        required=False, min_value=SCORE_MINVALUE, max_value=SCORE_MAXVALUE)
 
     class Meta:
         fields = '__all__'
@@ -113,8 +112,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         author = self.context['request'].user
         if Review.objects.filter(title_id=title, author=author).exists():
             raise serializers.ValidationError(
-                "Вы уже оставляли обзор на данное произведение"
-            )
+                ErrorMessage.ALREADY_HAS_REVIEW_ERROR)
         return data
 
 
@@ -133,10 +131,10 @@ class SignUpSerializer(serializers.Serializer):
             return data
         if User.objects.filter(email=email).exists():
             raise serializers.ValidationError(
-                'Пользователь с такми `email` уже существует!')
+                ErrorMessage.ALREADY_USED_EMAIL_ERROR)
         if User.objects.filter(username=username).exists():
             raise serializers.ValidationError(
-                'Пользователь с такми `username` уже существует!')
+                ErrorMessage.ALREADY_USED_USERNAME_ERROR)
         return data
 
 

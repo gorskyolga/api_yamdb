@@ -138,3 +138,19 @@ REST_FRAMEWORK = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=30),
 }
+
+
+# Other constants
+REGEX_USERNAME = r'^[\w.@+-]+\Z'
+# шаблон для проверки, что строка состоит только из латинских букв, цифр и символов .@+-
+SCORE_MINVALUE = 0
+SCORE_MAXVALUE = 10
+
+
+class ErrorMessage:
+    ALREADY_HAS_REVIEW_ERROR = 'Вы уже оставляли обзор на данное произведение'
+    ALREADY_USED_EMAIL_ERROR = 'Пользователь с таким `email` уже существует!'
+    ALREADY_USED_USERNAME_ERROR = 'Пользователь с таким `username` уже существует!'
+    USERNAME_ME_DENIED_ERROR = 'Использование значения "me" в качестве `username` запрещено!'
+    USERNAME_WRONG_REGEX_ERROR = f'Значение `username` не удовлетворяет шаблону "{REGEX_USERNAME}"!'
+    WRONG_TITLE_YEAR_ERROR = 'Проверьте год выпуска произведения!'
