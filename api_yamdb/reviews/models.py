@@ -1,8 +1,9 @@
 from django.db import models
 from django.db.models.constraints import UniqueConstraint
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 
 from api.validators import validate_year
+from api_yamdb.settings import SCORE_MAXVALUE, SCORE_MINVALUE
 from users.models import User
 
 
@@ -65,13 +66,12 @@ class Title(models.Model):
         verbose_name='Описание произведения',
         help_text='Не обязательное поле. Значение по умолчание - пусто.',
         blank=True,
-        # null=True
         default=''
     )
     genre = models.ManyToManyField(
         Genre, through='TitleGenre', related_name='titles',
         verbose_name='Жанр произведения',
-        help_text='Жанр произведения из существующих жанров'
+        help_text='Жанр произведения из существующих жанров.'
     )
     category = models.ForeignKey(
         Category,
@@ -80,7 +80,7 @@ class Title(models.Model):
         on_delete=models.SET_NULL,
         related_name='titles',
         verbose_name='Категория произведения',
-        help_text='Категория произведения из существующих категорий',
+        help_text='Категория произведения из существующих категорий.',
     )
 
     class Meta:
@@ -106,34 +106,56 @@ class TitleGenre(models.Model):
 
 class Review(models.Model):
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='reviews', null=True)
+        User, on_delete=models.CASCADE, related_name='reviews',
+        verbose_name='Автор отзыва', help_text='Автор отзыва')
     title = models.ForeignKey(
-        Title, on_delete=models.CASCADE, related_name='reviews')
-    text = models.TextField()
-    score = models.IntegerField(validators=[MinValueValidator(0),
-                                            MaxValueValidator(10)])
+        Title, on_delete=models.CASCADE, related_name='reviews',
+        verbose_name='Произведение',
+        help_text='Произведение, к которому относится отзыв')
+    text = models.TextField(
+        verbose_name='Текст отзыва', help_text='Напишите отзыв'
+    )
+    score = models.PositiveSmallIntegerField(
+        validators=(MinValueValidator(SCORE_MINVALUE),
+                    MaxValueValidator(SCORE_MAXVALUE),),
+        verbose_name='Оценка произведения',
+        help_text='Укажите оценку')
     pub_date = models.DateTimeField(
-        'Дата добавления', auto_now_add=True, db_index=True)
+        verbose_name='Дата добавления', auto_now_add=True, db_index=True,
+        help_text='Дата добавления отзыва')
 
     class Meta:
         ordering = ('-pub_date', )
         verbose_name = 'Отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = (
-            UniqueConstraint(fields=['title', 'author'], name='unique_review'),
+            UniqueConstraint(fields=('title', 'author',),
+                             name='unique_review'),
         )
+
+    def __str__(self):
+        return self.text
 
 
 class Comment(models.Model):
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='comments')
+        User, on_delete=models.CASCADE, related_name='comments',
+        verbose_name='Автор комментария', help_text='Автор комментария')
     review = models.ForeignKey(
-        Review, on_delete=models.CASCADE, related_name='comments')
-    text = models.TextField()
+        Review, on_delete=models.CASCADE, related_name='comments',
+        verbose_name='Отзыв',
+        help_text='Отзыв, к которому относится комментарий')
+    text = models.TextField(
+        verbose_name='Текст комментария', help_text='Напишите комментарий'
+    )
     pub_date = models.DateTimeField(
-        'Дата добавления', auto_now_add=True, db_index=True)
+        verbose_name='Дата добавления', auto_now_add=True, db_index=True,
+        help_text='Дата добавления комментария')
 
     class Meta:
         ordering = ('-pub_date', )
         verbose_name = 'Комментарий'
         verbose_name_plural = 'Комментарии'
+
+    def __str__(self):
+        return self.text

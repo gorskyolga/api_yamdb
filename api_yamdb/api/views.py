@@ -16,7 +16,7 @@ from api.serializers import (
     SignUpSerializer, TitleCreateUpdateSerializer, TitleSerializer,
     TokenSerializer, UserSerializer
 )
-from api_yamdb.settings import EMAIL_SUBJECT, EMAIL_ADDRESS
+from api_yamdb.settings import EMAIL_ADDRESS, EMAIL_SUBJECT
 from reviews.models import Category, Genre, Review, Title
 from users.models import User
 
