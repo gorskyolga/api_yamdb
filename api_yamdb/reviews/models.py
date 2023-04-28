@@ -88,13 +88,14 @@ class TitleGenre(models.Model):
 
 class Review(models.Model):
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name='reviews', null=True)
+        User, on_delete=models.CASCADE, related_name='reviews')
     title = models.ForeignKey(
         Title, on_delete=models.CASCADE, related_name='reviews')
-    text = models.TextField()
+    text = models.TextField(help_text='Напишите отзыв')
     score = models.PositiveSmallIntegerField(
-        validators=[MinValueValidator(SCORE_MINVALUE),
-                    MaxValueValidator(SCORE_MAXVALUE)])
+        validators=(MinValueValidator(SCORE_MINVALUE),
+                    MaxValueValidator(SCORE_MAXVALUE),),
+        help_text='Укажите оценку')
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
 
@@ -115,7 +116,7 @@ class Comment(models.Model):
         User, on_delete=models.CASCADE, related_name='comments')
     review = models.ForeignKey(
         Review, on_delete=models.CASCADE, related_name='comments')
-    text = models.TextField()
+    text = models.TextField(help_text='Напишите комментарий')
     pub_date = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
 
