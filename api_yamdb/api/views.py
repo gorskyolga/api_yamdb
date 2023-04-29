@@ -16,7 +16,7 @@ from api.serializers import (
     SignUpSerializer, TitleCreateUpdateSerializer, TitleSerializer,
     TokenSerializer, UserSerializer
 )
-from api_yamdb.settings import EMAIL_ADDRESS, EMAIL_SUBJECT
+from api_yamdb.settings import EMAIL_ADDRESS, EMAIL_SUBJECT, HTTPMethod
 from reviews.models import Category, Genre, Review, Title
 from users.models import User
 
@@ -37,7 +37,8 @@ class TitleViewSet(viewsets.ModelViewSet):
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
 
     def get_serializer_class(self):
-        if self.request.method in ('POST', 'PUT', 'PATCH'):
+        if self.request.method in (HTTPMethod.POST, HTTPMethod.PUT,
+                                   HTTPMethod.PATCH):
             return TitleCreateUpdateSerializer
         return TitleSerializer
 
@@ -96,7 +97,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         return self.get_review().comments.all()
 
 
-@api_view(('POST',))
+@api_view((HTTPMethod.POST,))
 @permission_classes((permissions.AllowAny,))
 def signup(request):
     serializer = SignUpSerializer(data=request.data)
@@ -113,7 +114,7 @@ def signup(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(('POST',))
+@api_view((HTTPMethod.POST,))
 @permission_classes((permissions.AllowAny,))
 def token(request):
     serializer = TokenSerializer(data=request.data)
@@ -137,13 +138,14 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('=username',)
     lookup_field = 'username'
-    http_method_names = ('get', 'post', 'head', 'patch', 'delete',)
+    http_method_names = (HTTPMethod.get, HTTPMethod.post, HTTPMethod.patch,
+                         HTTPMethod.delete,)
 
-    @action(methods=('get', 'patch',), detail=False,
+    @action(methods=(HTTPMethod.get, HTTPMethod.patch,), detail=False,
             permission_classes=(permissions.IsAuthenticated,))
     def me(self, request):
         user = self.request.user
-        if self.request.method == 'GET':
+        if self.request.method == HTTPMethod.GET:
             serializer = self.get_serializer(user)
         else:
             serializer = self.get_serializer(

@@ -4,7 +4,8 @@ from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from api.validators import validate_username, validate_year
-from api_yamdb.settings import SCORE_MAXVALUE, SCORE_MINVALUE, ErrorMessage
+from api_yamdb.settings import (SCORE_MAXVALUE, SCORE_MINVALUE, ErrorMessage,
+                                HTTPMethod)
 from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
 from users.models import User
 
@@ -103,7 +104,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
 
     def validate(self, data):
-        if self.context['request'].method != 'POST':
+        if self.context['request'].method != HTTPMethod.POST:
             return data
         title = get_object_or_404(
             Title,
