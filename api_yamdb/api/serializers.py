@@ -1,5 +1,4 @@
 from django.db import transaction
-from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
@@ -38,10 +37,7 @@ class TitleSerializer(serializers.ModelSerializer):
                   'category',)
 
     def get_rating(self, obj):
-        rating = Review.objects.filter(
-            title_id=obj).aggregate(Avg('score'))['score__avg']
-        if rating is not None:
-            return round(rating, 0)
+        return Review.calc_title_rating(obj)
 
 
 class TitleCreateUpdateSerializer(TitleSerializer):
