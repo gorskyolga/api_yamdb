@@ -9,6 +9,7 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
+from api.filters import TitleFilter
 from api.permissions import (AdminModeratAuthorOrReadonly, IsAdmin,
                              IsAdminOrReadonly)
 from api.serializers import (
@@ -31,26 +32,17 @@ class CreateListDestroyViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadonly,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.request.method in (HTTPMethod.POST, HTTPMethod.PUT,
                                    HTTPMethod.PATCH):
             return TitleCreateUpdateSerializer
         return TitleSerializer
-
-    def get_queryset(self):
-        queryset = Title.objects.all()
-        genre_slug = self.request.query_params.get('genre')
-        if genre_slug is not None:
-            queryset = queryset.filter(genre__slug=genre_slug)
-        category_slug = self.request.query_params.get('category')
-        if category_slug is not None:
-            queryset = queryset.filter(category__slug=category_slug)
-        return queryset
 
 
 class CategoryViewSet(CreateListDestroyViewSet):
