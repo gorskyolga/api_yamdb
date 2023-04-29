@@ -9,6 +9,7 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
+from api.filters import TitleFilter
 from api.permissions import (AdminModeratAuthorOrReadonly, IsAdmin,
                              IsAdminOrReadonly)
 from api.serializers import (
@@ -16,7 +17,7 @@ from api.serializers import (
     SignUpSerializer, TitleCreateUpdateSerializer, TitleSerializer,
     TokenSerializer, UserSerializer
 )
-from api_yamdb.settings import EMAIL_ADDRESS, EMAIL_SUBJECT
+from api_yamdb.settings import EMAIL_ADDRESS, EMAIL_SUBJECT, HTTPMethod
 from reviews.models import Category, Genre, Review, Title
 from users.models import User
 
@@ -31,25 +32,17 @@ class CreateListDestroyViewSet(mixins.CreateModelMixin, mixins.ListModelMixin,
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
     serializer_class = TitleSerializer
     permission_classes = (IsAdminOrReadonly,)
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
-        if self.request.method in ('POST', 'PUT', 'PATCH'):
+        if self.request.method in (HTTPMethod.POST, HTTPMethod.PUT,
+                                   HTTPMethod.PATCH):
             return TitleCreateUpdateSerializer
         return TitleSerializer
-
-    def get_queryset(self):
-        queryset = Title.objects.all()
-        genre_slug = self.request.query_params.get('genre')
-        if genre_slug is not None:
-            queryset = queryset.filter(genre__slug=genre_slug)
-        category_slug = self.request.query_params.get('category')
-        if category_slug is not None:
-            queryset = queryset.filter(category__slug=category_slug)
-        return queryset
 
 
 class CategoryViewSet(CreateListDestroyViewSet):
@@ -96,7 +89,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         return self.get_review().comments.all()
 
 
-@api_view(('POST',))
+@api_view((HTTPMethod.POST,))
 @permission_classes((permissions.AllowAny,))
 def signup(request):
     serializer = SignUpSerializer(data=request.data)
@@ -113,7 +106,7 @@ def signup(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(('POST',))
+@api_view((HTTPMethod.POST,))
 @permission_classes((permissions.AllowAny,))
 def token(request):
     serializer = TokenSerializer(data=request.data)
@@ -137,13 +130,14 @@ class UserViewSet(viewsets.ModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ('=username',)
     lookup_field = 'username'
-    http_method_names = ('get', 'post', 'head', 'patch', 'delete',)
+    http_method_names = (HTTPMethod.get, HTTPMethod.post, HTTPMethod.patch,
+                         HTTPMethod.delete,)
 
-    @action(methods=('get', 'patch',), detail=False,
+    @action(methods=(HTTPMethod.get, HTTPMethod.patch,), detail=False,
             permission_classes=(permissions.IsAuthenticated,))
     def me(self, request):
         user = self.request.user
-        if self.request.method == 'GET':
+        if self.request.method == HTTPMethod.GET:
             serializer = self.get_serializer(user)
         else:
             serializer = self.get_serializer(

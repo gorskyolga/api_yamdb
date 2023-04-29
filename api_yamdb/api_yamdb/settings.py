@@ -154,3 +154,15 @@ class ErrorMessage:
     USERNAME_ME_DENIED_ERROR = 'Использование значения "me" в качестве `username` запрещено!'
     USERNAME_WRONG_REGEX_ERROR = f'Значение `username` не удовлетворяет шаблону "{REGEX_USERNAME}"!'
     WRONG_TITLE_YEAR_ERROR = 'Проверьте год выпуска произведения!'
+
+
+class HTTPMethod:
+    GET = 'GET'
+    get = 'get'
+    POST = 'POST'
+    post = 'post'
+    PUT = 'PUT'
+    PATCH = 'PATCH'
+    patch = 'patch'
+    DELETE = 'DELETE'
+    delete = 'delete'

@@ -1,10 +1,10 @@
 from django.db import transaction
-from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
 from api.validators import validate_username, validate_year
-from api_yamdb.settings import SCORE_MAXVALUE, SCORE_MINVALUE, ErrorMessage
+from api_yamdb.settings import (SCORE_MAXVALUE, SCORE_MINVALUE, ErrorMessage,
+                                HTTPMethod)
 from reviews.models import Category, Comment, Genre, Review, Title, TitleGenre
 from users.models import User
 
@@ -37,10 +37,7 @@ class TitleSerializer(serializers.ModelSerializer):
                   'category',)
 
     def get_rating(self, obj):
-        rating = Review.objects.filter(
-            title_id=obj).aggregate(Avg('score'))['score__avg']
-        if rating is not None:
-            return round(rating, 0)
+        return Review.calc_title_rating(obj)
 
 
 class TitleCreateUpdateSerializer(TitleSerializer):
@@ -103,7 +100,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         model = Review
 
     def validate(self, data):
-        if self.context['request'].method != 'POST':
+        if self.context['request'].method != HTTPMethod.POST:
             return data
         title = get_object_or_404(
             Title,

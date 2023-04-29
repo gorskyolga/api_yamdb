@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Avg
 from django.db.models.constraints import UniqueConstraint
 from django.core.validators import MaxValueValidator, MinValueValidator
 
@@ -135,6 +136,11 @@ class Review(models.Model):
 
     def __str__(self):
         return self.text
+
+    def calc_title_rating(self):
+        rating = self.reviews.aggregate(Avg('score'))['score__avg']
+        if rating is not None:
+            return round(rating, 0)
 
 
 class Comment(models.Model):
