@@ -39,10 +39,9 @@ class TitleViewSet(viewsets.ModelViewSet):
     filterset_class = TitleFilter
 
     def get_serializer_class(self):
-        if self.request.method in (HTTPMethod.POST, HTTPMethod.PUT,
-                                   HTTPMethod.PATCH):
-            return TitleCreateUpdateSerializer
-        return TitleSerializer
+        if self.request.method in permissions.SAFE_METHODS:
+            return TitleSerializer
+        return TitleCreateUpdateSerializer
 
 
 class CategoryViewSet(CreateListDestroyViewSet):
