@@ -1,6 +1,7 @@
 # api_yamdb
 ## Description
 API for **Yamdb project**
+
 Yamdb project is a platform for reviews of various works of art.
 It is possible to set a rating and add comments to reviews of other users.
 ## Technologies
